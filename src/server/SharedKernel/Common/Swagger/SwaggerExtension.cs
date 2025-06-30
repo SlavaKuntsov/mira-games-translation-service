@@ -30,7 +30,7 @@ public static class SwaggerExtension
 			{
 				options.SwaggerDoc("v1", new OpenApiInfo { Title = "Web API v1", Version = "v1" });
 
-				options.ExampleFilters();
+				// options.ExampleFilters();
 
 				options.AddSecurityDefinition(
 					"Bearer",

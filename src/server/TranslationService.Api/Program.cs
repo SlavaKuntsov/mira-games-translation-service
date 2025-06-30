@@ -3,6 +3,7 @@ using Common.Exceptions;
 using Common.Swagger;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
+using TranslationService.Application.Extensions;
 using TranslationService.Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,7 @@ services
 	.AddSwagger();
 
 services
-	// .AddApplication()
+	.AddApplication()
 	.AddPersistence(configuration);
 
 var app = builder.Build();

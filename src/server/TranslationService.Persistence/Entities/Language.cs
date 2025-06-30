@@ -3,7 +3,20 @@
 public class Language
 {
 	public Guid Id { get; set; }
-	public string Name { get; set; } = string.Empty;
-	public string Code { get; set; } = string.Empty;
-	public bool IsSelected { get; set; } = false;
+	public string Name { get; set; }
+	public string Code { get; set; }
+	public bool IsSelected { get; set; }
+
+	public Language() {	}
+
+	public Language(
+		string name,
+		string code,
+		bool isSelected = false)
+	{
+		Id = Guid.NewGuid();
+		Name = name;
+		Code = code;
+		IsSelected = isSelected;
+	}
 }
