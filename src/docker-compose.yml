@@ -1,0 +1,36 @@
+services:
+
+  translation-service:
+    container_name: translation-service
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: server/UsersDockerfile
+    ports:
+      - "7001:7001"
+    environment:
+      - APP_PORT=7001
+      - ASPNETCORE_ENVIRONMENT=Production
+      - CONNECTION_STRING=Host=translation-postgres;Port=5432;Database=translation;Username=postgres;Password=1;
+      - Timezone=Europe/Minsk;
+    depends_on:
+      - translation-postgres
+      - redis
+      - rabbitmq
+  
+  translation-postgres:
+    container_name: translation-postgres
+    image: postgres:alpine
+    mem_limit: 512m
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: translation
+    volumes:
+      - translation-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  translation-postgres-data:
