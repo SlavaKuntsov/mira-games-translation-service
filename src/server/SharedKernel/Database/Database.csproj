@@ -4,11 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>Databases</AssemblyName>
-        <RootNamespace>Databases</RootNamespace>
+        <PackageId>Database</PackageId>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="8.0.14"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.14">
