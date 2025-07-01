@@ -37,8 +37,6 @@ app.UseSwaggerUI(
 		c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API v1");
 	});
 
-app.UseHttpsRedirection();
-
 app.UseForwardedHeaders(
 	new ForwardedHeadersOptions
 	{

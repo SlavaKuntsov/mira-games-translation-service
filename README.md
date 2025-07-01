@@ -2,5 +2,5 @@
 Test task on the topic of translateion service at Mira Games.
 
 ``` bash
-https://localhost:7001/swagger/index.html
+http://localhost:7000/swagger/index.html
 ```

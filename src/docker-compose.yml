@@ -1,36 +1,42 @@
+version: "3.9" 
+
 services:
 
-  translation-service:
-    container_name: translation-service
-    restart: unless-stopped
+  service:
     build:
       context: .
-      dockerfile: server/UsersDockerfile
-    ports:
-      - "7001:7001"
-    environment:
-      - APP_PORT=7001
-      - ASPNETCORE_ENVIRONMENT=Production
-      - CONNECTION_STRING=Host=translation-postgres;Port=5432;Database=translation;Username=postgres;Password=1;
-      - Timezone=Europe/Minsk;
-    depends_on:
-      - translation-postgres
-      - redis
-      - rabbitmq
-  
-  translation-postgres:
-    container_name: translation-postgres
-    image: postgres:alpine
-    mem_limit: 512m
+      dockerfile: server/Dockerfile
+    container_name: service
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "7000:7000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:7000
+      - CONNECTION_STRING=Host=postgres;Port=5432;Database=translation;Username=postgres;Password=1;
+      - Timezone=Europe/Minsk;
+    depends_on:
+      postgres:
+        condition: service_healthy
+        
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+#    mem_limit: 512m
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1
       POSTGRES_DB: translation
     volumes:
-      - translation-postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  translation-postgres-data:
+  postgres-data:
