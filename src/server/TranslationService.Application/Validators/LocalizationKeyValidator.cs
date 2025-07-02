@@ -14,6 +14,6 @@ public class LocalizationKeyValidator : BaseCommandValidator<LocalizationKey>
 
 		RuleFor(x => x.Key)
 			.NotEmpty()
-			.WithMessage("Name is required");
+			.WithMessage("Key is required");
 	}
 }

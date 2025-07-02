@@ -54,7 +54,7 @@ public class LocalizationKeyService(
 		CancellationToken ct = default)
 	{
 		var entity = new LocalizationKey { Id = dto.Id, Key = dto.Key };
-		
+
 		var validationResult = await validator.ValidateAsync(entity, ct);
 
 		if (!validationResult.IsValid)

@@ -7,7 +7,11 @@ public class Language
 	public string Code { get; set; }
 	public bool IsSelected { get; set; }
 
-	public Language() {	}
+	public virtual ICollection<Translation> Translations { get; set; } = [];
+
+	public Language()
+	{
+	}
 
 	public Language(
 		string name,

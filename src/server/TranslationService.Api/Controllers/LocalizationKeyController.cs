@@ -3,7 +3,6 @@ using Common.Results;
 using Microsoft.AspNetCore.Mvc;
 using TranslationService.Application.Abstractions.Services;
 using TranslationService.Application.Dtos;
-using TranslationService.Persistence.Entities;
 
 namespace TranslationService.Api.Controllers;
 

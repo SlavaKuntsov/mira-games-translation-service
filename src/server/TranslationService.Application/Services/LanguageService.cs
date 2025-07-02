@@ -9,8 +9,7 @@ namespace TranslationService.Application.Services;
 
 public class LanguageService(
 	ApplicationDbContext dbContext,
-	IValidator<Language> validator
-) : ILanguageService
+	IValidator<Language> validator) : ILanguageService
 {
 	public async Task<Result<List<Language>>> GetAsync(bool isSelected, CancellationToken ct = default)
 	{
@@ -19,7 +18,7 @@ public class LanguageService(
 		if (isSelected)
 			query = query.Where(l => l.IsSelected);
 
-		var result = await query.ToListAsync(cancellationToken: ct);
+		var result = await query.ToListAsync(ct);
 
 		return Result.Ok(result);
 	}
@@ -29,13 +28,15 @@ public class LanguageService(
 		var entity = new Language(name, code);
 
 		var validationResult = await validator.ValidateAsync(entity, ct);
+
 		if (!validationResult.IsValid)
 			return Result.Fail(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
 
-		var exists = await dbContext.Languages.AnyAsync(l => l.Code == code, cancellationToken: ct);
+		var exists = await dbContext.Languages.AnyAsync(l => l.Code == code, ct);
 
 		if (exists)
-			return Result.Fail(new Error("Language code already exists").WithMetadata("Type", "AlreadyExists"));
+			return Result.Fail(
+				new Error("Language code already exists").WithMetadata("Type", "AlreadyExists"));
 
 		await dbContext.Languages.AddAsync(entity, ct);
 		await dbContext.SaveChangesAsync(ct);
@@ -46,10 +47,12 @@ public class LanguageService(
 	public async Task<Result<Language>> UpdateAsync(Language language, CancellationToken ct = default)
 	{
 		var validationResult = await validator.ValidateAsync(language, ct);
+
 		if (!validationResult.IsValid)
 			return Result.Fail(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
 
-		var existing = await dbContext.Languages.FindAsync([language.Id], cancellationToken: ct);
+		var existing = await dbContext.Languages.FindAsync([language.Id], ct);
+
 		if (existing is null)
 			return Result.Fail(new Error("Language not found").WithMetadata("Type", "NotFound"));
 
@@ -58,12 +61,14 @@ public class LanguageService(
 		existing.IsSelected = language.IsSelected;
 
 		await dbContext.SaveChangesAsync(ct);
+
 		return Result.Ok(existing);
 	}
 
 	public async Task<Result> DeleteAsync(Guid id, CancellationToken ct = default)
 	{
-		var entity = await dbContext.Languages.FindAsync([id], cancellationToken: ct);
+		var entity = await dbContext.Languages.FindAsync([id], ct);
+
 		if (entity is null)
 			return Result.Fail(new Error("Language not found").WithMetadata("Type", "NotFound"));
 

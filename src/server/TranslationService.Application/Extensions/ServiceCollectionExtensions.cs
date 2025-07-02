@@ -3,8 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TranslationService.Application.Abstractions.Services;
 using TranslationService.Application.Services;
 using TranslationService.Application.Validators;
-using TranslationService.Persistence.Entities;
-using Utilities.Validators;
 
 namespace TranslationService.Application.Extensions;
 
@@ -14,10 +12,12 @@ public static class ServiceCollectionExtensions
 	{
 		services.AddScoped<ILanguageService, LanguageService>();
 		services.AddScoped<ILocalizationKeyService, LocalizationKeyService>();
-		
+		services.AddScoped<ITranslationService, Services.TranslationService>();
+
 		services.AddValidatorsFromAssemblyContaining<LanguageValidator>();
 		services.AddValidatorsFromAssemblyContaining<LocalizationKeyValidator>();
-		
+		services.AddValidatorsFromAssemblyContaining<TranslationValidator>();
+
 		return services;
 	}
 }

@@ -1,3 +1,3 @@
 ﻿namespace TranslationService.Application.Dtos;
 
-public record LanguageCreateDto(string Name, string Code);
+public sealed record LanguageCreateDto(string Name, string Code);

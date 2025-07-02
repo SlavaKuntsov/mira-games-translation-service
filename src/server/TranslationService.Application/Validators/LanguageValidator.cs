@@ -20,6 +20,6 @@ public class LanguageValidator : BaseCommandValidator<Language>
 		RuleFor(x => x.Code)
 			.NotEmpty()
 			.WithMessage("Code is required")
-			.MaximumLength(10);
+			.MaximumLength(3);
 	}
 }
