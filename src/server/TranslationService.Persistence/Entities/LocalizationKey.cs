@@ -6,4 +6,12 @@ public class LocalizationKey
 	public string Key { get; set; } = string.Empty; 
 
 	public virtual ICollection<Translation> Translations { get; set; } = [];
+
+	public LocalizationKey() { }
+
+	public LocalizationKey(string key)
+	{
+		Id = Guid.NewGuid();
+		Key = key;
+	}
 }
