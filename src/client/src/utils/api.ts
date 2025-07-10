@@ -92,3 +92,20 @@ export async function getTranslations(
     totalPages: pagination.totalPages,
   };
 }
+
+
+export async function createTranslation(
+  key: string,
+  languageCode: string,
+  text: string
+): Promise<string> {
+  const res = await fetch('http://localhost:7000/api/v1/translations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, languageCode, text }),
+  });
+  if (!res.ok) throw new Error(`Failed to create translation: ${res.status}`);
+  const json = await res.json();
+  // сервер возвращает { data: "<newId>" }
+  return json.data as string;
+}

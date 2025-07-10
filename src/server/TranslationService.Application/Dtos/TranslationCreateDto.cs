@@ -1,6 +1,7 @@
 ﻿namespace TranslationService.Application.Dtos;
 
 public record TranslationCreateDto(
-	Guid KeyId,
+	// Guid KeyId,
+	string Key,
 	string LanguageCode,
 	string Text);

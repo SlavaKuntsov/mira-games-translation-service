@@ -11,7 +11,8 @@ namespace TranslationService.Application.Services;
 
 public class TranslationService(
 	ApplicationDbContext dbContext,
-	IValidator<TranslationCreateDto> createValidator)
+	IValidator<TranslationCreateDto> createValidator,
+	IValidator<LocalizationKey> validator)
 	: ITranslationService
 {
 	public async Task<Result<ApiResponsePaginated<IEnumerable<TranslationDto>>>> GetAsync(
@@ -74,13 +75,13 @@ public class TranslationService(
 			return Result.Fail<Guid>(
 				validation.Errors.Select(e => e.ErrorMessage).ToList());
 
-		var keyEntity = await dbContext.LocalizationKeys
-			.FirstOrDefaultAsync(k => k.Id == dto.KeyId, ct);
-
-		if (keyEntity is null)
-			return Result.Fail<Guid>(
-				new Error($"Localization key with id '{dto.KeyId}' not found")
-					.WithMetadata("Type", "NotFound"));
+		// var keyEntity = await dbContext.LocalizationKeys
+		// 	.FirstOrDefaultAsync(k => k.Id == dto.KeyId, ct);
+		//
+		// if (keyEntity is null)
+		// 	return Result.Fail<Guid>(
+		// 		new Error($"Localization key with id '{dto.KeyId}' not found")
+		// 			.WithMetadata("Type", "NotFound"));
 
 		var lang = await dbContext.Languages
 			.FirstOrDefaultAsync(l => l.Code == dto.LanguageCode, ct);
@@ -90,14 +91,32 @@ public class TranslationService(
 				new Error($"Language '{dto.LanguageCode}' not found")
 					.WithMetadata("Type", "NotFound"));
 
-		var exists = await dbContext.Translations
+		var keyEntity = new LocalizationKey(dto.Key);
+
+		var validationResult = await validator.ValidateAsync(keyEntity, ct);
+
+		if (!validationResult.IsValid)
+			return Result.Fail(
+				validationResult.Errors
+					.Select(e => e.ErrorMessage)
+					.ToList());
+
+		var existsKey = await dbContext.LocalizationKeys
+			.AnyAsync(k => k.Key == keyEntity.Key, ct);
+
+		if (existsKey)
+			return Result.Fail(
+				new Error("Localization key already exists")
+					.WithMetadata("Type", "AlreadyExists"));
+
+		var existsTranslation = await dbContext.Translations
 			.AnyAsync(
 				t =>
 					t.LocalizationKeyId == keyEntity.Id &&
 					t.LanguageId == lang.Id,
 				ct);
 
-		if (exists)
+		if (existsTranslation)
 			return Result.Fail<Guid>(
 				new Error("Translation already exists")
 					.WithMetadata("Type", "AlreadyExists"));
@@ -107,6 +126,8 @@ public class TranslationService(
 			lang.Id,
 			dto.Text);
 
+
+		await dbContext.LocalizationKeys.AddAsync(keyEntity, ct);
 		await dbContext.Translations.AddAsync(translation, ct);
 		await dbContext.SaveChangesAsync(ct);
 

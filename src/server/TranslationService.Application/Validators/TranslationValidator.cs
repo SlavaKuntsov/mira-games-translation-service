@@ -8,9 +8,9 @@ public class TranslationValidator : BaseCommandValidator<TranslationCreateDto>
 {
 	public TranslationValidator()
 	{
-		RuleFor(x => x.KeyId)
+		RuleFor(x => x.Key)
 			.NotEmpty()
-			.WithMessage("Key Id is required");
+			.WithMessage("Key is required");
 
 		RuleFor(x => x.LanguageCode)
 			.NotEmpty()
