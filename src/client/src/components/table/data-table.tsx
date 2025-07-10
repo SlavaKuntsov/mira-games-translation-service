@@ -9,6 +9,8 @@ import {
 	useReactTable,
 	type ColumnDef,
 	type ColumnFiltersState,
+	type PaginationState,
+	type Updater,
 } from '@tanstack/react-table';
 
 import { Input } from '@/components/ui/input';
@@ -21,22 +23,34 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { getSelectedLanguagesSync } from '@/lib/language-store';
-import type { Language } from '@/types/table-types';
+import type { Translation } from '@/types/table-types';
 import React, { useEffect, useState } from 'react';
 import { Sheet } from '../sheet/sheet';
 import { DataTablePagination } from './data-table-pagination';
 import { DropdownMenu } from './dropdown-menu';
 
-interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[];
-	data: TData[];
+interface DataTableProps {
+	columns: ColumnDef<Translation, any>[];
+	data: Translation[];
+	manualPagination?: boolean;
+	pageCount?: number;
+	pageIndex?: number;
+	pageSize?: number;
+	onPageChange?: (idx: number) => void;
+	onPageSizeChange?: (size: number) => void;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable({
 	columns,
 	data,
-}: DataTableProps<TData, TValue>) {
-	const [localData, setLocalData] = useState<TData[]>(data);
+	manualPagination = false,
+	pageCount = 1,
+	pageIndex = 0,
+	pageSize = 10,
+	onPageChange,
+	onPageSizeChange,
+}: DataTableProps) {
+	const [localData, setLocalData] = useState<Translation[]>(data);
 
 	useEffect(() => {
 		setLocalData(data);
@@ -46,21 +60,12 @@ export function DataTable<TData, TValue>({
 		[]
 	);
 
-	const defaultLanguages = getSelectedLanguagesSync();
+	const selectedCodes = getSelectedLanguagesSync().map(l => l.code);
 
 	const initialVisibility = columns.reduce<Record<string, boolean>>(
 		(acc, col) => {
 			const id = col.id ?? '';
-
-			if (
-				id === 'key' ||
-				id === 'actions' ||
-				defaultLanguages.includes(id as Language)
-			) {
-				acc[id] = true;
-			} else {
-				acc[id] = false;
-			}
+			acc[id] = id === 'key' || id === 'actions' || selectedCodes.includes(id);
 			return acc;
 		},
 		{}
@@ -69,20 +74,29 @@ export function DataTable<TData, TValue>({
 	const table = useReactTable({
 		data: localData,
 		columns,
-		initialState: {
+		manualPagination,
+		pageCount,
+		state: {
+			pagination: { pageIndex, pageSize },
+			columnFilters,
 			columnVisibility: initialVisibility,
 		},
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		onColumnFiltersChange: setColumnFilters,
 		getFilteredRowModel: getFilteredRowModel(),
-		state: {
-			columnFilters,
+		onColumnFiltersChange: setColumnFilters,
+		onPaginationChange: (updater: Updater<PaginationState>) => {
+			const newState =
+				typeof updater === 'function'
+					? updater({ pageIndex, pageSize })
+					: updater;
+			onPageChange?.(newState.pageIndex);
+			onPageSizeChange?.(newState.pageSize);
 		},
 	});
 
-	const handleAddRow = (row: TData) => {
+	const handleAddRow = (row: Translation) => {
 		setLocalData(prev => [...prev, row]);
 	};
 
@@ -92,9 +106,7 @@ export function DataTable<TData, TValue>({
 				<Input
 					placeholder='Filter keys...'
 					value={(table.getColumn('key')?.getFilterValue() as string) ?? ''}
-					onChange={event =>
-						table.getColumn('key')?.setFilterValue(event.target.value)
-					}
+					onChange={e => table.getColumn('key')?.setFilterValue(e.target.value)}
 					className='max-w-sm'
 				/>
 				<div className='flex flex-row items-center gap-4'>
@@ -107,23 +119,21 @@ export function DataTable<TData, TValue>({
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-													)}
-										</TableHead>
-									);
-								})}
+								{headerGroup.headers.map(header => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder
+											? null
+											: flexRender(
+													header.column.columnDef.header,
+													header.getContext()
+												)}
+									</TableHead>
+								))}
 							</TableRow>
 						))}
 					</TableHeader>
 					<TableBody>
-						{table.getRowModel().rows?.length ? (
+						{table.getRowModel().rows.length ? (
 							table.getRowModel().rows.map(row => (
 								<TableRow
 									key={row.id}

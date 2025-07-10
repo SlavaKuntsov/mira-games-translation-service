@@ -1,126 +1,94 @@
-import { setLanguages } from "@/lib/language-store";
-import type { Language, Translation } from "@/types/table-types";
-import { TranslationSchema } from "@/types/table-types";
+import { setLanguages } from '@/lib/language-store';
+import type { Language, Translation, TranslationsResponse } from '@/types/table-types';
+import { LanguagesResponseSchema, TranslationsResponseSchema } from '@/types/table-types';
 
 export async function getLanguages(): Promise<Language[]> {
-	// пример получения языков с бэкенда
-	// const res = await fetch('/api/languages')
-	// if (!res.ok) throw new Error('Failed to fetch languages')
-	// const langs: unknown = await res.json()
-	// Валидация с zod, если надо
-	// return langs as Language[]
-  setLanguages(['ru', 'en', 'tr'])
-  return ['ru', 'en', 'tr'];
+	try {
+		const res = await fetch(
+			'http://localhost:7000/api/v1/languages?isSelected=false'
+		);
+
+		if (!res.ok) {
+			throw new Error(
+				`Failed to fetch languages: ${res.status} ${res.statusText}`
+			);
+		}
+
+		const rawData: unknown = await res.json();
+
+		// Валидация с помощью Zod
+		const validatedData = LanguagesResponseSchema.parse(rawData);
+
+		const languages = validatedData.data;
+
+		// Обновляем store с полными объектами языков
+		setLanguages(languages);
+
+		return languages;
+	} catch (error) {
+		console.error('Error fetching languages:', error);
+
+		// Fallback данные в случае ошибки
+		const fallbackLanguages: Language[] = [
+			{
+				id: '9cb8bcf2-7095-4ef7-b3f0-3f71de790404',
+				name: 'Russian',
+				code: 'ru',
+				isSelected: true,
+				translations: [],
+			},
+			{
+				id: '3ca75a35-7311-4a4c-b56d-e90f0a6c4307',
+				name: 'English',
+				code: 'en',
+				isSelected: false,
+				translations: [],
+			},
+		];
+
+		setLanguages(fallbackLanguages);
+		return fallbackLanguages;
+	}
 }
 
+export interface PaginatedTranslations {
+  items: Translation[];
+  totalPages: number;
+}
 
-// 2) Эмуляция «запроса» данных
-export async function getData(): Promise<Translation[]> {
-  const raw = [
-    {
-      id: "728e3d52f",
-      key: "greeting11111111111111111111",
-      translations: {
-        ru: "Привет111111111111111",
-        en: "Hello1111111111111",
-        tr: "Merhaba11111111111111"
-      }
-    },
-    {
-      id: "7284ed52f",
-      key: "farewell",
-      translations: {
-        ru: "Пока",
-        en: "Goodbye",
-        tr: "Güle güle"
-      }
-    },
-    {
-      id: "677ed52f",
-      key: "thanks",
-      translations: {
-        ru: "Спасибо",
-        en: "Thank you",
-        tr: "Teşekkürler"
-      }
-    },
-    {
-      id: "738ed52f",
-      key: "yes",
-      translations: {
-        ru: "Да",
-        en: "Yes",
-        tr: "Evet"
-      }
-    },
-    {
-      id: "128ed52f",
-      key: "no",
-      translations: {
-        ru: "Нет",
-        en: "No",
-        tr: "Hayır"
-      }
-    },
-    {
-      id: "828ed52f",
-      key: "good",
-      translations: {
-        ru: "Хорошо",
-        en: "Good",
-        tr: "İyi"
-      }
-    },
-    {
-      id: "928ed52f",
-      key: "bad",
-      translations: {
-        ru: "Плохо",
-        en: "Bad",
-        tr: "Kötü"
-      }
-    },
-    {
-      id: "a28ed52f",
-      key: "see_you",
-      translations: {
-        ru: "Увидимся",
-        en: "See you",
-        tr: "Görüşürüz"
-      }
-    },
-    {
-      id: "528ed52f",
-      key: "evening",
-      translations: {
-        ru: "Вечер",
-        en: "Evening",
-        tr: "Akşam"
-      }
-    },
-    {
-      id: "628ed52f",
-      key: "night",
-      translations: {
-        ru: "Ночь",
-        en: "Night",
-        tr: "Gece"
-      }
-    },
-    {
-      id: "728ed52g",
-      key: "how_are_you",
-      translations: {
-        ru: "Как дела?",
-        en: "How are you?",
-        tr: "Nasılsın?"
-      }
-    },
-  ]
+export async function getTranslations(
+  pageNumber = 1,
+  pageSize = 10,
+  sortByAsc = true
+): Promise<PaginatedTranslations> {
+  const url = new URL('http://localhost:7000/api/v1/translations');
+  url.searchParams.set('pageNumber', String(pageNumber));
+  url.searchParams.set('pageSize', String(pageSize));
+  url.searchParams.set('sortByAsc', String(sortByAsc));
 
-  // Парсим каждый объект
-  const parsed = raw.map((item) => TranslationSchema.parse(item))
-  // эмулируем задержку
-  await new Promise((r) => setTimeout(r, 500))
-  return parsed
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    throw new Error(`Failed to fetch translations: ${res.status} ${res.statusText}`);
+  }
+
+  const raw: unknown = await res.json();
+  const parsed = TranslationsResponseSchema.parse(raw) as TranslationsResponse;
+  const pagination = parsed.data;
+
+  const items: Translation[] = pagination.data.map(record => {
+    const translationsMap: Record<string, string> = {};
+    record.translations.forEach(t => {
+      translationsMap[t.languageCode] = t.text;
+    });
+    return {
+      id: record.keyId,
+      key: record.key,
+      translations: translationsMap,
+    };
+  });
+
+  return {
+    items,
+    totalPages: pagination.totalPages,
+  };
 }

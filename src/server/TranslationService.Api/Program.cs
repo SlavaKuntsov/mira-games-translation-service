@@ -19,6 +19,19 @@ services
 	.AddExceptions()
 	.AddSwagger();
 
+services.AddCors(options =>
+{
+	options.AddDefaultPolicy(policy =>
+	{
+		policy.WithOrigins(
+			"http://localhost:5173"
+		);
+		policy.AllowAnyHeader();
+		policy.AllowAnyMethod();
+		policy.AllowCredentials();
+	});
+});
+
 services
 	.AddApplication()
 	.AddPersistence(configuration);
@@ -30,7 +43,6 @@ app.ApplyMigrations();
 app.UseExceptionHandler();
 
 app.UseSwagger();
-
 app.UseSwaggerUI(
 	c =>
 	{

@@ -14,16 +14,10 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { TableCell } from '@/components/ui/table';
 import { DataTableColumnHeader } from './data-table-column-header';
 
-const languageTitles: Record<Language, string> = {
-	ru: 'Russian',
-	en: 'English',
-	tr: 'Turkish',
-};
-
 export function columnsFactory(
-	langs: Language[],
+	languages: Language[],
 	onDeleteRow: (id: string) => void,
-	onEditCell: (id: string, field: Language | 'key', value: string) => void
+	onEditCell: (id: string, field: string | 'key', value: string) => void
 ): ColumnDef<Translation>[] {
 	return [
 		{
@@ -42,20 +36,20 @@ export function columnsFactory(
 				/>
 			),
 		},
-		...langs.map<ColumnDef<Translation>>(lang => ({
-			accessorFn: row => row.translations[lang],
-			id: lang,
+		...languages.map<ColumnDef<Translation>>(language => ({
+			accessorFn: row => row.translations[language.code],
+			id: language.code,
 			header: ({ column }) => (
-				<DataTableColumnHeader column={column} title={languageTitles[lang]} />
+				<DataTableColumnHeader column={column} title={language.name} />
 			),
 			cell: ({ row }) => {
-				const value = row.original.translations[lang];
+				const value = row.original.translations[language.code];
 				return (
 					<Input
 						className='w-full bg-transparent outline-none border border-transparent focus:border-gray-300 px-2 py-1 rounded-sm'
-						defaultValue={value}
+						defaultValue={value || ''}
 						onBlur={e =>
-							onEditCell(row.original.id.toString(), lang, e.target.value)
+							onEditCell(row.original.id.toString(), language.code, e.target.value)
 						}
 						placeholder='Translation'
 					/>
@@ -78,7 +72,6 @@ export function columnsFactory(
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align='end' className='w-32'>
-							{/* <DropdownMenuSeparator /> */}
 							<DropdownMenuItem
 								variant='destructive'
 								onClick={() => onDeleteRow(row.original.id.toString())}
