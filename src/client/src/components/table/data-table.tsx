@@ -59,8 +59,11 @@ export function DataTable({
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
 		[]
 	);
+	const selectedRaw = getSelectedLanguagesSync();
 
-	const selectedCodes = getSelectedLanguagesSync().map(l => l.code);
+	const selectedCodes = selectedRaw
+		.map(item => (typeof item === 'string' ? item : item?.code))
+		.filter((code): code is string => typeof code === 'string');
 
 	const initialVisibility = columns.reduce<Record<string, boolean>>(
 		(acc, col) => {

@@ -91,7 +91,7 @@ export function Sheet({ onAddRow }: SheetProps) {
 					<SheetDescription>Add a new translation row.</SheetDescription>
 				</SheetHeader>
 				<div className='grid gap-4 px-4'>
-					<div className='grid gap-1'>
+					<div className='grid gap-3'>
 						<Label htmlFor='new-key'>Key</Label>
 						<Input
 							id='new-key'
@@ -101,7 +101,7 @@ export function Sheet({ onAddRow }: SheetProps) {
 						/>
 					</div>
 					{langs.map(code => (
-						<div key={code} className='grid gap-1'>
+						<div key={code} className='grid gap-3'>
 							<Label>{code}</Label>
 							<Input
 								placeholder={`Translation (${code})`}
